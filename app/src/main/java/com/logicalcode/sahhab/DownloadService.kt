@@ -99,6 +99,7 @@ class DownloadService : Service() {
         req.addOption("--concurrent-fragments", 8)
         req.addOption("--retries", 10)
         req.addOption("--fragment-retries", 10)
+        t.cookieFile?.let { if (File(it).exists()) req.addOption("--cookies", it) }
         when {
             t.quality == "audio" -> {
                 req.addOption("-f", "ba/b")
@@ -153,7 +154,7 @@ class DownloadService : Service() {
         } catch (e: Exception) {
             if (t.state == State.CANCELED) { work.deleteRecursively(); return }
             // نُبقي الملفات الجزئية حتى تكمل «أعد المحاولة» من حيث توقفت
-            fail(t, friendlyError(e.message ?: e.toString()))
+            fail(t, Engine.friendly(e.message ?: e.toString()))
         }
     }
 

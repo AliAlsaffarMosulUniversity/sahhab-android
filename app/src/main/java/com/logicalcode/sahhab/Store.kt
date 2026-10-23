@@ -25,12 +25,14 @@ class Task(
     var fileName: String? = null
     var mime: String? = null
     var error: String? = null
+    var cookieFile: String? = null
 
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id); put("url", url); put("title", title); put("quality", quality)
         put("state", state.name); put("created", created); put("progress", progress.toDouble())
         put("fileUri", fileUri ?: ""); put("fileName", fileName ?: ""); put("mime", mime ?: "")
         put("error", error ?: "")
+        put("cookieFile", cookieFile ?: "")
     }
 
     companion object {
@@ -45,6 +47,7 @@ class Task(
             t.fileName = o.optString("fileName").ifEmpty { null }
             t.mime = o.optString("mime").ifEmpty { null }
             t.error = o.optString("error").ifEmpty { null }
+            t.cookieFile = o.optString("cookieFile").ifEmpty { null }
             return t
         }
     }

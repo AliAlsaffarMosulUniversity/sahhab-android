@@ -152,6 +152,11 @@ class MainActivity : Activity() {
         row.addView(findBtn, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(44)))
         col.addView(row, lp(top = 18))
 
+        // المتصفح الداخلي: أسهل طريقة للتنزيل من يوتيوب وفيسبوك
+        val browse = button("🌐  افتح المتصفح ونزّل من يوتيوب وفيسبوك", primary = true) { BrowserActivity.open(this, null) }
+        browse.textSize = 15f
+        col.addView(browse, lp(h = dp(52), top = 12))
+
         engineText = text("", 13f, MUTED)
         col.addView(engineText, lp(top = 8))
 
