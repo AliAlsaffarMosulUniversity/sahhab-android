@@ -21,6 +21,7 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -62,6 +63,7 @@ class BrowserActivity : Activity() {
     private var fullView: View? = null
     private var fullCallback: WebChromeClient.CustomViewCallback? = null
     private var pageHasVideo = false
+    @Volatile private var overlayShown = false
 
     private fun dp(v: Int) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), resources.displayMetrics).toInt()
     private fun rounded(c: Int, r: Int, stroke: Int = 0) = GradientDrawable().apply {
@@ -132,13 +134,14 @@ class BrowserActivity : Activity() {
             mediaPlaybackRequiresUserGesture = true
             setSupportMultipleWindows(false)
         }
+        web.addJavascriptInterface(Bridge(), "SahhabNative")
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
                 val s = req.url.scheme ?: ""
                 return s != "http" && s != "https"   // نبقى داخل المتصفح ولا نفتح تطبيقات أخرى
             }
-            override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) { pageHasVideo = false; onUrl(url) }
-            override fun onPageFinished(view: WebView, url: String) { onUrl(url) }
+            override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) { pageHasVideo = false; overlayShown = false; onUrl(url) }
+            override fun onPageFinished(view: WebView, url: String) { onUrl(url); view.evaluateJavascript(OVERLAY_JS, null) }
             override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) { onUrl(url) }
         }
         web.webChromeClient = object : WebChromeClient() {
@@ -149,7 +152,7 @@ class BrowserActivity : Activity() {
                 fullView = view; fullCallback = callback
                 root.addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
                 window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                fab.bringToFront()
+                fab.bringToFront(); updateFab()
             }
             override fun onHideCustomView() { exitFull() }
         }
@@ -161,6 +164,7 @@ class BrowserActivity : Activity() {
                     if (home.visibility != View.VISIBLE) web.evaluateJavascript("document.querySelector('video')?1:0") { r ->
                         val has = r == "1"
                         if (has != pageHasVideo) { pageHasVideo = has; updateFab() }
+                        if (has) web.evaluateJavascript(OVERLAY_JS, null)
                     }
                     main.postDelayed(this, 2000)
                 }
@@ -220,11 +224,13 @@ class BrowserActivity : Activity() {
     }
 
     private fun updateFab() {
-        val show = home.visibility != View.VISIBLE && (Engine.isVideoPage(web.url) || pageHasVideo)
+        // الزر السفلي احتياطي: يظهر في ملء الشاشة، أو إذا لم يظهر الزر فوق الفيديو
+        val show = home.visibility != View.VISIBLE && (fullView != null || (!overlayShown && (Engine.isVideoPage(web.url) || pageHasVideo)))
         fab.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun exitFull() {
+        main.post { updateFab() }
         fullView?.let { root.removeView(it) }
         fullView = null
         fullCallback?.onCustomViewHidden(); fullCallback = null
@@ -257,6 +263,83 @@ class BrowserActivity : Activity() {
           return JSON.stringify({link: link, src: src});
         })();
     """.trimIndent()
+
+    /** زر صغير فوق الفيديو نفسه، في زاويته العليا، مثل ماريا. */
+    private val OVERLAY_JS = """
+        (function(){
+          if (window.__sahhabBtn) return; window.__sahhabBtn = true;
+          var b = document.createElement('div');
+          b.textContent = '⬇ تنزيل';
+          b.style.cssText = 'position:fixed;z-index:2147483647;display:none;background:#3BB3A4;color:#0E1A19;' +
+            'font:bold 14px sans-serif;padding:7px 13px;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.45);' +
+            'direction:rtl;cursor:pointer;-webkit-user-select:none;user-select:none';
+          document.documentElement.appendChild(b);
+          var cur = null, shown = false;
+          function pick(){
+            var vs = document.querySelectorAll('video'), best = null, area = 0, H = innerHeight, W = innerWidth;
+            for (var i = 0; i < vs.length; i++){
+              var r = vs[i].getBoundingClientRect();
+              if (r.width < 120 || r.height < 70) continue;
+              var w = Math.max(0, Math.min(r.right, W) - Math.max(r.left, 0));
+              var h = Math.max(0, Math.min(r.bottom, H) - Math.max(r.top, 0));
+              var a = w * h + (vs[i].paused ? 0 : 1e7);
+              if (w * h > 0 && a > area){ area = a; best = vs[i]; }
+            }
+            return best;
+          }
+          function place(){
+            cur = pick();
+            var vis = !!cur;
+            if (vis){
+              var r = cur.getBoundingClientRect();
+              b.style.display = 'block';
+              b.style.top = Math.max(8, r.top + 8) + 'px';
+              b.style.left = Math.max(8, Math.min(r.right, innerWidth) - b.offsetWidth - 8) + 'px';
+            } else b.style.display = 'none';
+            if (vis !== shown){ shown = vis; try { SahhabNative.overlay(vis); } catch(e){} }
+          }
+          function info(v){
+            var link = '', src = v.currentSrc || v.src || '', el = v;
+            for (var i = 0; i < 14 && el && !link; i++){
+              el = el.parentElement; if (!el) break;
+              var a = el.querySelector('a[href*="/videos/"],a[href*="/reel/"],a[href*="/watch"],a[href*="video.php"],a[href*="story.php"],a[href*="/status/"]');
+              if (a) link = a.href;
+            }
+            return [link, src];
+          }
+          b.addEventListener('click', function(e){
+            e.preventDefault(); e.stopPropagation();
+            var v = cur || pick(); var x = v ? info(v) : ['', ''];
+            b.textContent = '… جارٍ';
+            setTimeout(function(){ b.textContent = '⬇ تنزيل'; }, 2500);
+            SahhabNative.download(x[0], x[1]);
+          }, true);
+          setInterval(place, 600);
+          addEventListener('scroll', place, {passive: true});
+          place();
+        })();
+    """.trimIndent()
+
+    inner class Bridge {
+        @JavascriptInterface fun download(link: String?, src: String?) {
+            main.post { chooseTarget(link ?: "", src ?: "") }
+        }
+        @JavascriptInterface fun overlay(visible: Boolean) {
+            main.post { overlayShown = visible; updateFab() }
+        }
+    }
+
+    private fun chooseTarget(link: String, src: String) {
+        val page = web.url ?: return
+        val target = when {
+            Engine.isVideoPage(page) -> page
+            Engine.isVideoPage(link) -> link
+            src.startsWith("http") -> src
+            link.isNotEmpty() -> link
+            else -> page
+        }
+        fetchAndChoose(target, page)
+    }
 
     private fun onDownload() {
         val page = web.url ?: return
