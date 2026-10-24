@@ -25,6 +25,18 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <!-- نافذة صغيرة فوق يوتيوب وفيسبوك عند المشاركة -->
+        <activity
+            android:name=".ShareActivity"
+            android:exported="true"
+            android:label="نزّل بسحّاب"
+            android:icon="@mipmap/ic_launcher"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:noHistory="true">
             <intent-filter android:label="نزّل بسحّاب">
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
