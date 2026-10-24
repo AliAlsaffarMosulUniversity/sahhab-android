@@ -45,13 +45,13 @@ class BrowserActivity : Activity() {
         }
     }
 
-    private val BG = Color.parseColor("#121E1D")
-    private val SURFACE = Color.parseColor("#1A2928")
-    private val INK = Color.parseColor("#E4EDEA")
-    private val MUTED = Color.parseColor("#93A6A2")
-    private val BRAND = Color.parseColor("#3BB3A4")
-    private val ON_BRAND = Color.parseColor("#0E1A19")
-    private val LINE = Color.parseColor("#2A3C3A")
+    private val BG = Color.parseColor("#0D1117")
+    private val SURFACE = Color.parseColor("#161B22")
+    private val INK = Color.parseColor("#F0F3F6")
+    private val MUTED = Color.parseColor("#8B949E")
+    private val BRAND = Color.parseColor("#3D7BFD")
+    private val ON_BRAND = Color.parseColor("#FFFFFF")
+    private val LINE = Color.parseColor("#262D36")
 
     private val main = Handler(Looper.getMainLooper())
     private lateinit var web: WebView
@@ -116,7 +116,9 @@ class BrowserActivity : Activity() {
         // زر التنزيل العائم
         fab = Button(this).apply {
             text = "⬇  تنزيل الفيديو"; textSize = 16f; typeface = Typeface.DEFAULT_BOLD; isAllCaps = false
-            setTextColor(ON_BRAND); background = rounded(BRAND, 28); elevation = dp(6).toFloat()
+            setTextColor(ON_BRAND); elevation = dp(8).toFloat()
+            background = android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(Color.argb(60, 255, 255, 255)),
+                GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(Color.parseColor("#5A92FF"), Color.parseColor("#2F67F0"))).apply { cornerRadius = dp(28).toFloat() }, null)
             setPadding(dp(22), 0, dp(22), 0); visibility = View.GONE
             setOnClickListener { onDownload() }
         }
@@ -195,7 +197,7 @@ class BrowserActivity : Activity() {
             if (i % 2 == 0) { row = LinearLayout(this); box.addView(row, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(64)).apply { topMargin = dp(10) }) }
             val b = Button(this).apply {
                 text = name; textSize = 16f; isAllCaps = false; setTextColor(INK); stateListAnimator = null
-                background = rounded(SURFACE, 14, LINE)
+                background = android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(Color.argb(40, 255, 255, 255)), rounded(SURFACE, 16, LINE), null)
                 setOnClickListener { go(url) }
             }
             row!!.addView(b, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (i % 2 == 1) marginStart = dp(10) })
@@ -270,7 +272,7 @@ class BrowserActivity : Activity() {
           if (window.__sahhabBtn) return; window.__sahhabBtn = true;
           var b = document.createElement('div');
           b.textContent = '⬇ تنزيل';
-          b.style.cssText = 'position:fixed;z-index:2147483647;display:none;background:#3BB3A4;color:#0E1A19;' +
+          b.style.cssText = 'position:fixed;z-index:2147483647;display:none;background:linear-gradient(#5A92FF,#2F67F0);color:#FFFFFF;' +
             'font:bold 14px sans-serif;padding:7px 13px;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.45);' +
             'direction:rtl;cursor:pointer;-webkit-user-select:none;user-select:none';
           document.documentElement.appendChild(b);
@@ -362,7 +364,7 @@ class BrowserActivity : Activity() {
     }
 
     private fun fetchAndChoose(url: String, page: String) {
-        val wait = AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+        val wait = AlertDialog.Builder(this, R.style.SahhabDialog)
             .setMessage("أقرأ الفيديو…").setCancelable(true).create()
         wait.show()
         val cookies = Engine.writeCookies(this, page)
@@ -379,7 +381,7 @@ class BrowserActivity : Activity() {
                 r.onSuccess { info ->
                     val title = info.title ?: info.fulltitle ?: "فيديو"
                     val opts = Engine.qualities(info)
-                    AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                    AlertDialog.Builder(this, R.style.SahhabDialog)
                         .setTitle(title)
                         .setItems(opts.map { it.second }.toTypedArray()) { _, which ->
                             Engine.start(this, url, title, opts[which].first, cookies)
@@ -388,7 +390,7 @@ class BrowserActivity : Activity() {
                         .setNegativeButton("إلغاء", null)
                         .show()
                 }.onFailure {
-                    AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                    AlertDialog.Builder(this, R.style.SahhabDialog)
                         .setTitle("تعذّر التنزيل")
                         .setMessage(Engine.friendly(it.message ?: it.toString()))
                         .setPositiveButton("حسناً", null)

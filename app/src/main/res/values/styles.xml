@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- هوية سحّاب: رمادي فحمي داكن مع أزرق واثق -->
+    <color name="bg">#0D1117</color>
+    <color name="surface">#161B22</color>
+    <color name="brand">#3D7BFD</color>
+    <color name="ink">#F0F3F6</color>
+    <color name="muted">#8B949E</color>
+
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/surface</item>
+        <item name="android:colorPrimaryDark">@color/bg</item>
+        <item name="android:colorAccent">@color/brand</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:textColorPrimary">@color/ink</item>
+        <item name="android:textColorSecondary">@color/muted</item>
+    </style>
+
+    <style name="ShareTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:colorAccent">@color/brand</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
+    <style name="SahhabDialog" parent="@android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/brand</item>
+        <item name="android:windowBackground">@drawable/dialog_bg</item>
+        <item name="android:textColorPrimary">@color/ink</item>
+        <item name="android:textColorSecondary">@color/muted</item>
+    </style>
+</resources>

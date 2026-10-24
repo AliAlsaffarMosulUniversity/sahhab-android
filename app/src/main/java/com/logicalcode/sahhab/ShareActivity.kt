@@ -15,7 +15,7 @@ import android.widget.Toast
 class ShareActivity : Activity() {
 
     private val main = Handler(Looper.getMainLooper())
-    private val dlgTheme = android.R.style.Theme_Material_Dialog_Alert
+    private val dlgTheme = R.style.SahhabDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

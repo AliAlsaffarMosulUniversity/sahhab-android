@@ -14,7 +14,7 @@
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:allowBackup="false"
-        android:theme="@android:style/Theme.Material.NoActionBar">
+        android:theme="@style/AppTheme">
 
         <activity
             android:name=".MainActivity"
@@ -33,7 +33,7 @@
             android:exported="true"
             android:label="نزّل بسحّاب"
             android:icon="@mipmap/ic_launcher"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:theme="@style/ShareTheme"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:noHistory="true">

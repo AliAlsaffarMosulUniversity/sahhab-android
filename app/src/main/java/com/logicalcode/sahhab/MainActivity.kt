@@ -39,16 +39,19 @@ import java.util.UUID
 class MainActivity : Activity() {
 
     // الألوان: نفس هوية سحّاب
-    private val BG = Color.parseColor("#121E1D")
-    private val SURFACE = Color.parseColor("#1A2928")
-    private val INK = Color.parseColor("#E4EDEA")
-    private val MUTED = Color.parseColor("#93A6A2")
-    private val LINE = Color.parseColor("#2A3C3A")
-    private val BRAND = Color.parseColor("#3BB3A4")
-    private val ON_BRAND = Color.parseColor("#0E1A19")
-    private val EDGE = Color.parseColor("#F0B93A")
-    private val DANGER = Color.parseColor("#E5735F")
-    private val OK = Color.parseColor("#5CC08A")
+    private val BG = Color.parseColor("#0D1117")
+    private val SURFACE = Color.parseColor("#161B22")
+    private val INK = Color.parseColor("#F0F3F6")
+    private val MUTED = Color.parseColor("#8B949E")
+    private val LINE = Color.parseColor("#262D36")
+    private val BRAND = Color.parseColor("#3D7BFD")
+    private val ON_BRAND = Color.parseColor("#FFFFFF")
+    private val EDGE = Color.parseColor("#F5A524")
+    private val DANGER = Color.parseColor("#F85149")
+    private val OK = Color.parseColor("#3FB950")
+    private val SURFACE2 = Color.parseColor("#1F2630")
+    private val BRAND_TOP = Color.parseColor("#5A92FF")
+    private val BRAND_BOTTOM = Color.parseColor("#2F67F0")
 
     private val main = Handler(Looper.getMainLooper())
     private lateinit var input: EditText
@@ -101,13 +104,25 @@ class MainActivity : Activity() {
         textDirection = View.TEXT_DIRECTION_FIRST_STRONG_RTL
     }
 
+    private fun gradient(radius: Int): GradientDrawable =
+        GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(BRAND_TOP, BRAND_BOTTOM)).apply { cornerRadius = dp(radius).toFloat() }
+
+    // تأثير لمس ناعم فوق أي خلفية
+    private fun ripple(bg: android.graphics.drawable.Drawable): android.graphics.drawable.Drawable =
+        android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(Color.argb(50, 255, 255, 255)), bg, null)
+
+    private fun tint(c: Int, a: Int) = Color.argb(a, Color.red(c), Color.green(c), Color.blue(c))
+
     private fun button(label: String, primary: Boolean = false, color: Int = INK, onClick: () -> Unit): Button = Button(this).apply {
-        text = label; isAllCaps = false; textSize = 14f
+        text = label; isAllCaps = false; textSize = 14f; letterSpacing = 0.01f
         stateListAnimator = null
-        minHeight = dp(40); minimumHeight = dp(40)
-        setPadding(dp(14), 0, dp(14), 0)
-        if (primary) { background = rounded(BRAND, 10); setTextColor(ON_BRAND); typeface = Typeface.DEFAULT_BOLD }
-        else { background = rounded(Color.TRANSPARENT, 10, LINE); setTextColor(color) }
+        minHeight = dp(44); minimumHeight = dp(44)
+        setPadding(dp(16), 0, dp(16), 0)
+        when {
+            primary -> { background = ripple(gradient(14)); setTextColor(ON_BRAND); typeface = Typeface.DEFAULT_BOLD; elevation = dp(2).toFloat() }
+            color == DANGER -> { background = ripple(rounded(tint(DANGER, 38), 14)); setTextColor(DANGER) }
+            else -> { background = ripple(rounded(SURFACE2, 14)); setTextColor(color) }
+        }
         setOnClickListener { onClick() }
     }
 
@@ -120,14 +135,20 @@ class MainActivity : Activity() {
             setPadding(dp(16), dp(24), dp(16), dp(40))
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
-        col.addView(text("سحّاب", 36f, INK, true))
-        col.addView(text("الصق رابط الفيديو أو الملف، أو شاركه إلى سحّاب من أي تطبيق.", 14f, MUTED), lp(top = 2))
+        // الترويسة: الأيقونة والاسم
+        val head = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        head.addView(ImageView(this).apply { setImageResource(R.mipmap.ic_launcher) }, LinearLayout.LayoutParams(dp(52), dp(52)))
+        val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        titles.addView(text("سحّاب", 28f, INK, true).apply { letterSpacing = -0.01f })
+        titles.addView(text("نزّل الفيديو والملفات من أي موقع", 13f, MUTED))
+        head.addView(titles, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(12) })
+        col.addView(head)
 
         // خانة الرابط
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = rounded(SURFACE, 14, BRAND)
+            background = rounded(SURFACE, 18, LINE)
             setPadding(dp(6), dp(6), dp(6), dp(6))
         }
         input = EditText(this).apply {
@@ -150,7 +171,7 @@ class MainActivity : Activity() {
         row.addView(input, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(6); marginEnd = dp(6) })
         findBtn = button("ابحث", primary = true) { onFind() }
         row.addView(findBtn, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(44)))
-        col.addView(row, lp(top = 18))
+        col.addView(row, lp(top = 22))
 
         // المتصفح الداخلي: أسهل طريقة للتنزيل من يوتيوب وفيسبوك
         val browse = button("🌐  افتح المتصفح ونزّل من يوتيوب وفيسبوك", primary = true) { BrowserActivity.open(this, null) }
@@ -162,8 +183,8 @@ class MainActivity : Activity() {
 
         infoBox = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = rounded(SURFACE, 14, LINE)
-            setPadding(dp(14), dp(14), dp(14), dp(14))
+            background = rounded(SURFACE, 18, LINE)
+            setPadding(dp(16), dp(16), dp(16), dp(16))
             visibility = View.GONE
         }
         col.addView(infoBox, lp(top = 16))
@@ -314,7 +335,7 @@ class MainActivity : Activity() {
     private fun itemView(t: Task): View {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = rounded(SURFACE, 12, LINE)
+            background = rounded(SURFACE, 18, LINE)
             setPadding(dp(14), dp(12), dp(14), dp(12))
         }
         card.addView(text(t.title, 15f, INK, true).apply { maxLines = 2; ellipsize = TextUtils.TruncateAt.END })
@@ -326,12 +347,16 @@ class MainActivity : Activity() {
             State.ERROR -> (t.error ?: "فشل التنزيل") to DANGER
             State.CANCELED -> "أُلغي" to MUTED
         }
-        card.addView(text(status, 13f, color), lp(top = 4))
+        // حالة التنزيل كشارة ملوّنة
+        card.addView(text(status, 12.5f, color).apply {
+            background = rounded(tint(color, 34), 8); setPadding(dp(10), dp(4), dp(10), dp(4))
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
         if (t.state == State.RUNNING || t.state == State.QUEUED) {
             val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
                 max = 100; progress = t.progress.toInt()
                 isIndeterminate = t.state == State.QUEUED || t.progress <= 0f
                 progressTintList = android.content.res.ColorStateList.valueOf(BRAND)
+                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(SURFACE2)
             }
             card.addView(bar, lp(top = 8))
         }
